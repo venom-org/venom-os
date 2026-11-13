@@ -1,0 +1,61 @@
+// venom-os curated defaults for venomx.
+//
+// `venom-os up` installs this file as `<dir>/venomx/defaults.zon` and puts
+// `<dir>` first in the supervised daemon's $XDG_CONFIG_DIRS. venomx reads it
+// read-only, below the user's $XDG_CONFIG_HOME/venomx/config.zon: any key the
+// user sets replaces the same key here (keys.tables merge per table name).
+.{
+    // venom-os supervises a persistent `venomx serve`; a stray interactive
+    // `venomx` must never start a second, on-demand daemon that shadows it.
+    .daemon = .{ .interactive_start = false },
+    // The supervisor restarts venomx after a crash; durable checkpoints let
+    // the human restore sessions afterwards. Terminal text stays
+    // off: only topology and metadata are checkpointed.
+    .recovery = .{ .enabled = true },
+    // Status line at the top, with the curated segment order:
+    // session, mode, windows, venom's agents, attention, venom-os, clock.
+    .status = .{
+        .position = .top,
+        .priority = .{
+            .{ .id = "venomx.session", .priority = 100 },
+            .{ .id = "venomx.mode", .priority = 95 },
+            .{ .id = "venomx.windows", .priority = 90 },
+            .{ .id = "venom.agents", .priority = 85 },
+            .{ .id = "venomx.attention", .priority = 80 },
+            .{ .id = "venom-os.system", .priority = 60 },
+            .{ .id = "venomx.clock", .priority = 10 },
+        },
+    },
+    // Float presets: venom-os refers to its views by name, so
+    // the human resizes them here (or with `venomx config set
+    // floats.presets.venom-os.launcher.width '"60%"'`) instead of in code.
+    // Sizes are cells ("80") or percent of the window area ("60%").
+    .floats = .{
+        .presets = .{
+            .@"venom-os.launcher" = .{ .width = "50%", .height = "40%", .anchor = .top, .y = 2 },
+            .@"venom-os.settings" = .{ .width = "80%", .height = "80%", .anchor = .center, .title = "venom-os settings" },
+        },
+    },
+    // Curated key table: leader, then `g`, then a key opens a bundled TUI app
+    // in a new window of the focused session. The window goes away when the
+    // app exits (on_exit = remove), like everything else a human opens.
+    // `s` opens the settings popup on the pressing client only (a
+    // `pane.popup` binding mints its ticket implicitly): the user's
+    // venomx config.zon in $EDITOR (helix when unset). It closes when the
+    // editor exits.
+    .keys = .{
+        .tables = .{
+            .{
+                .name = "venom-os",
+                .prefix = "g",
+                .bind = .{
+                    .{ .key = "g", .verb = "window.create", .args = "{\"session\":\"{session}\",\"name\":\"lazygit\",\"argv\":[\"lazygit\"],\"on_exit\":\"remove\"}" },
+                    .{ .key = "f", .verb = "window.create", .args = "{\"session\":\"{session}\",\"name\":\"yazi\",\"argv\":[\"yazi\"],\"on_exit\":\"remove\"}" },
+                    .{ .key = "e", .verb = "window.create", .args = "{\"session\":\"{session}\",\"name\":\"helix\",\"argv\":[\"hx\"],\"on_exit\":\"remove\"}" },
+                    .{ .key = "t", .verb = "window.create", .args = "{\"session\":\"{session}\",\"name\":\"btop\",\"argv\":[\"btop\"],\"on_exit\":\"remove\"}" },
+                    .{ .key = "s", .verb = "pane.popup", .args = "{\"preset\":\"venom-os.settings\",\"argv\":[\"sh\",\"-c\",\"exec \\\"${EDITOR:-hx}\\\" \\\"${XDG_CONFIG_HOME:-$HOME/.config}/venomx/config.zon\\\"\"]}" },
+                },
+            },
+        },
+    },
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "venom-os",
+  "read": {"args": ["status"], "result": {"mode": "serve"}, "mcp": {"name": "status", "arguments": {}}},
+  "usage_error": {"args": ["service", "enable", "--name=nope"], "code": "invalid_params.enum"},
+  "mutation": {
+    "args": ["service", "disable", "--name=venomx"],
+    "result": {"name": "venomx", "enabled": false, "changed": true},
+    "mcp": {"name": "service_ddisable", "arguments": {"name": "venomx"}},
+    "observe": {"args": ["service", "list"], "before": {"services": [{"name": "venomx", "enabled": true}]}, "after": {"services": [{"name": "venomx", "enabled": false}]}}
+  },
+  "stream": {"kind": "events"},
+  "config": {
+    "key": "grants.unknown", "default": ".{.{.right=.read,.scope=\"*\"}}", "value": ".{.{.right=.read,.scope=\"config:root\"}}",
+    "observe": {
+      "args": ["whoami"],
+      "before": {"principal": "unknown", "kind": "unknown", "parent": null, "grants": [{"right": "read", "scope": "*"}], "namespace": "user", "expires": null},
+      "after": {"principal": "unknown", "kind": "unknown", "parent": null, "grants": [{"right": "read", "scope": "config:root"}], "namespace": "user", "expires": null}
+    }
+  }
+}
