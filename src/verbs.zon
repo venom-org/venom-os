@@ -1,0 +1,238 @@
+.{
+    .format = 1,
+
+    .tool = "venom-os",
+
+    .summary = "The Venom bundle: install curated defaults and supervise the ecosystem's daemons",
+
+    .verbs = .{
+        .{
+            .name = "status",
+            .summary = "Report how this daemon runs: serve or up mode, the installed venomx defaults and the supervised venomx (from the supervisor status file)",
+            .result = .{
+                .kind = .object,
+                .fields = .{
+                    .{
+                        .name = "mode",
+                        .summary = "serve: the agent-contract daemon alone; up: it also installed the defaults and supervises venomx",
+                        .type = .{
+                            .kind = .string,
+                            .choices = .{ "serve", "up" },
+                        },
+                        .required = true,
+                    },
+                    .{
+                        .name = "defaults",
+                        .summary = "Path of the installed venomx defaults.zon (up mode only)",
+                        .type = .{
+                            .kind = .string,
+                        },
+                    },
+                    .{
+                        .name = "venomx",
+                        .summary = "The supervised venomx worker (up mode with venomx enabled only)",
+                        .type = .{
+                            .kind = .object,
+                            .fields = .{
+                                .{
+                                    .name = "state",
+                                    .summary = "Supervisor state: pending, running, backoff, exited, failed or stopped",
+                                    .type = .{
+                                        .kind = .string,
+                                    },
+                                    .required = true,
+                                },
+                                .{
+                                    .name = "pid",
+                                    .summary = "Process ID while running",
+                                    .type = .{
+                                        .kind = .integer,
+                                        .min = 1,
+                                    },
+                                },
+                                .{
+                                    .name = "restarts",
+                                    .summary = "Restarts since venom-os up started",
+                                    .type = .{
+                                        .kind = .integer,
+                                        .min = 0,
+                                    },
+                                    .required = true,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            .grant = .read,
+            .examples = .{
+                .{
+                    .params = .{},
+                    .result = .{ .mode = "serve" },
+                },
+            },
+        },
+
+        .{
+            .name = "service.list",
+            .summary = "List the daemons venom-os up can supervise and whether each is enabled",
+            .result = .{
+                .kind = .object,
+                .fields = .{
+                    .{
+                        .name = "services",
+                        .summary = "Known services, by name",
+                        .type = .{
+                            .kind = .array,
+                            .items = .{
+                                .kind = .object,
+                                .fields = .{
+                                    .{
+                                        .name = "name",
+                                        .summary = "Service name",
+                                        .type = .{
+                                            .kind = .string,
+                                        },
+                                        .required = true,
+                                    },
+                                    .{
+                                        .name = "enabled",
+                                        .summary = "Whether venom-os up starts and supervises it",
+                                        .type = .{
+                                            .kind = .boolean,
+                                        },
+                                        .required = true,
+                                    },
+                                },
+                            },
+                        },
+                        .required = true,
+                    },
+                },
+            },
+            .grant = .read,
+            .examples = .{
+                .{
+                    .params = .{},
+                    .result = .{ .services = .{.{ .name = "venomx", .enabled = true }} },
+                },
+            },
+        },
+
+        .{
+            .name = "service.enable",
+            .summary = "Let venom-os up start and supervise a service (persisted; takes effect the next time up starts)",
+            .params = .{
+                .{
+                    .name = "name",
+                    .summary = "Service name",
+                    .type = .{
+                        .kind = .string,
+                        .choices = .{"venomx"},
+                    },
+                    .required = true,
+                },
+            },
+            .result = .{
+                .kind = .object,
+                .fields = .{
+                    .{
+                        .name = "name",
+                        .summary = "Service name",
+                        .type = .{
+                            .kind = .string,
+                        },
+                        .required = true,
+                    },
+                    .{
+                        .name = "enabled",
+                        .summary = "Always true",
+                        .type = .{
+                            .kind = .boolean,
+                        },
+                        .required = true,
+                    },
+                    .{
+                        .name = "changed",
+                        .summary = "False when the service was already enabled",
+                        .type = .{
+                            .kind = .boolean,
+                        },
+                        .required = true,
+                    },
+                },
+            },
+            .errors = .{
+                .{
+                    .code = "unavailable.service_state",
+                    .summary = "The service state file could not be written",
+                },
+            },
+            .grant = .write,
+            .examples = .{
+                .{
+                    .params = .{ .name = "venomx" },
+                    .result = .{ .name = "venomx", .enabled = true, .changed = false },
+                },
+            },
+        },
+
+        .{
+            .name = "service.disable",
+            .summary = "Stop venom-os up from starting a service (persisted; takes effect the next time up starts, a running service keeps running)",
+            .params = .{
+                .{
+                    .name = "name",
+                    .summary = "Service name",
+                    .type = .{
+                        .kind = .string,
+                        .choices = .{"venomx"},
+                    },
+                    .required = true,
+                },
+            },
+            .result = .{
+                .kind = .object,
+                .fields = .{
+                    .{
+                        .name = "name",
+                        .summary = "Service name",
+                        .type = .{
+                            .kind = .string,
+                        },
+                        .required = true,
+                    },
+                    .{
+                        .name = "enabled",
+                        .summary = "Always false",
+                        .type = .{
+                            .kind = .boolean,
+                        },
+                        .required = true,
+                    },
+                    .{
+                        .name = "changed",
+                        .summary = "False when the service was already disabled",
+                        .type = .{
+                            .kind = .boolean,
+                        },
+                        .required = true,
+                    },
+                },
+            },
+            .errors = .{
+                .{
+                    .code = "unavailable.service_state",
+                    .summary = "The service state file could not be written",
+                },
+            },
+            .grant = .write,
+            .examples = .{
+                .{
+                    .params = .{ .name = "venomx" },
+                    .result = .{ .name = "venomx", .enabled = false, .changed = true },
+                },
+            },
+        },
+    },
+}

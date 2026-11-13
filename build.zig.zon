@@ -1,0 +1,13 @@
+.{
+    .name = .venom_os,
+    .version = "0.0.0",
+    .fingerprint = 0x7acabb37c1b79e32, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.17.1",
+    .dependencies = .{
+        .venom_std = .{
+            .url = "git+https://github.com/venom-org/venom-std#2b3f91e5b8ae2f97d79894073b82ea3097e3ad67",
+            .hash = "venom_std-0.0.0-sfz3uq4LEABFCW5IOWmdJV867RXhkf0NZp_WQNVwPiLQ",
+        },
+    },
+    .paths = .{ "build.zig", "build.zig.zon", "src", "share", "test", "README.md", ".zigversion", "conformance" },
+}
